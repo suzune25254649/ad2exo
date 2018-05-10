@@ -15,64 +15,7 @@ OUTPUT_DIR = 'output'
 #まとめる場合、必要な数だけオブジェクトが時系列順に増える
 FLG_OTHER_ONE_DEST_EXO = False
 
-######################################
-
-print('Input video ID. for example : sm33134812')
-video_id = input('>>>  ')
-
 API_LIMIT = 100
-
-#APIにアクセスし、すべての広告情報を取得する
-#旧仕様には未対応
-histories = []
-while True:
-	with urllib.request.urlopen("https://api.nicoad.nicovideo.jp/v1/contents/video/%s/histories?offset=%s&limit=%s" % (video_id, len(histories), API_LIMIT)) as res:
-		text = res.read().decode("utf-8")
-		js = json.loads(text)
-
-		if 200 != js['meta']['status']:
-			break
-
-		histories.extend(js['data']['histories'])
-
-		#print(json.dumps(js, sort_keys=True, indent=2, ensure_ascii=False))
-
-		if API_LIMIT != len(js['data']['histories']):
-			break
-
-#同じ人物の広告を1つにまとめる
-#基本的に同じuserIdでまとめるが、匿名の場合は名前でまとめる
-if True:
-	users = {}
-	anonymice = {}
-
-	for item in histories:
-		if "userId" in item:
-			index = "uid%010d" % item["userId"]
-			if index in users:
-				target = users[index]
-				target["startedAt"] = item["startedAt"]
-				target["adPoint"] += item["adPoint"]
-				target["contribution"] += item["contribution"]
-			else:
-				users[index] = copy.deepcopy(item)
-		else:
-			index = 'ano_' + item["advertiserName"]
-			if index in anonymice:
-				target = anonymice[index]
-				target["startedAt"] = item["startedAt"]
-				target["adPoint"] += item["adPoint"]
-				target["contribution"] += item["contribution"]
-			else:
-				anonymice[index] = copy.deepcopy(item)
-	histories = list(users.values())
-	histories.extend(list(anonymice.values()))
-
-s = sorted(histories, key=lambda x:x['startedAt'])
-s = sorted(s, key=lambda x:x['contribution'], reverse=True)
-histories = s
-
-
 
 
 ###############################################################################################################
@@ -144,6 +87,59 @@ def search_max_rank(lines):
 #	4) TOP5用のexoファイルの置換処理を行い、置換したファイルを出力する
 #	5) 6位以降用のexoファイルも同様にする
 ###############################################################################################################
+
+print('Input video ID. for example : sm33134812')
+video_id = input('>>>  ')
+
+#APIにアクセスし、すべての広告情報を取得する
+#旧仕様には未対応
+histories = []
+while True:
+	with urllib.request.urlopen("https://api.nicoad.nicovideo.jp/v1/contents/video/%s/histories?offset=%s&limit=%s" % (video_id, len(histories), API_LIMIT)) as res:
+		text = res.read().decode("utf-8")
+		js = json.loads(text)
+
+		if 200 != js['meta']['status']:
+			break
+
+		histories.extend(js['data']['histories'])
+
+		#print(json.dumps(js, sort_keys=True, indent=2, ensure_ascii=False))
+
+		if API_LIMIT != len(js['data']['histories']):
+			break
+
+#同じ人物の広告を1つにまとめる
+#基本的に同じuserIdでまとめるが、匿名の場合は名前でまとめる
+if True:
+	users = {}
+	anonymice = {}
+
+	for item in histories:
+		if "userId" in item:
+			index = "uid%010d" % item["userId"]
+			if index in users:
+				target = users[index]
+				target["startedAt"] = item["startedAt"]
+				target["adPoint"] += item["adPoint"]
+				target["contribution"] += item["contribution"]
+			else:
+				users[index] = copy.deepcopy(item)
+		else:
+			index = 'ano_' + item["advertiserName"]
+			if index in anonymice:
+				target = anonymice[index]
+				target["startedAt"] = item["startedAt"]
+				target["adPoint"] += item["adPoint"]
+				target["contribution"] += item["contribution"]
+			else:
+				anonymice[index] = copy.deepcopy(item)
+	histories = list(users.values())
+	histories.extend(list(anonymice.values()))
+
+s = sorted(histories, key=lambda x:x['startedAt'])
+s = sorted(s, key=lambda x:x['contribution'], reverse=True)
+histories = s
 
 #出力ディレクトリの名前を決定する
 OUTPUT_DIR += '_' + datetime.now().strftime("%Y%m%d-%H%M%S")
