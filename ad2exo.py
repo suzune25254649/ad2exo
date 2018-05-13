@@ -123,6 +123,8 @@ if True:
 				target["startedAt"] = item["startedAt"]
 				target["adPoint"] += item["adPoint"]
 				target["contribution"] += item["contribution"]
+				if not "message" in target and "message" in item:
+					target["message"] = item["message"]
 			else:
 				users[index] = copy.deepcopy(item)
 		else:
@@ -132,6 +134,8 @@ if True:
 				target["startedAt"] = item["startedAt"]
 				target["adPoint"] += item["adPoint"]
 				target["contribution"] += item["contribution"]
+				if not "message" in target and "message" in item:
+					target["message"] = item["message"]
 			else:
 				anonymice[index] = copy.deepcopy(item)
 	histories = list(users.values())
